@@ -1,0 +1,11 @@
+[plugin]
+name = "flow"
+version = "0.1.0"
+description = "Development workflow automation"
+creator = "wave-cli"
+license = "MIT"
+homepage = "https://github.com/wave-cli/wave-flow"
+
+[compatibility]
+min_wave_version = "0.1.0"
+
