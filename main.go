@@ -27,6 +27,12 @@ func main() {
 // run is the testable core of the plugin. It reads config from r,
 // processes args, writes output to stdout/stderr, and returns an exit code.
 func run(args []string, r io.Reader, stdout, stderr io.Writer) int {
+	// Handle -h / --help flag first (before reading config)
+	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help") {
+		printHelp(stdout)
+		return 0
+	}
+
 	// Read config via SDK
 	cfg, err := sdk.ReadConfigFrom(r)
 	if err != nil {
@@ -70,4 +76,31 @@ func run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 	}
 
 	return flow.RunCommand(cmd, stdout, stderr)
+}
+
+// printHelp outputs usage information for wave flow.
+func printHelp(w io.Writer) {
+	fmt.Fprintln(w, `wave flow - development workflow automation
+
+Usage:
+  wave flow <command> [args...]
+  wave flow --list
+
+Flags:
+  -l, --list    List all available flow commands
+  -h, --help    Show this help message
+
+Examples:
+  wave flow build       Run the 'build' command
+  wave flow dev         Run the 'dev' command
+  wave flow --list      List all flow commands
+
+Commands are defined in the [flow] section of your Wavefile:
+
+  [flow.build]
+  cmd = "go build ./..."
+
+  [flow.dev]
+  cmd = "go run ."
+  env = { PORT = "3000" }`)
 }

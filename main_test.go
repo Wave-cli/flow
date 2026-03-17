@@ -56,6 +56,43 @@ func TestRunListCommandsShortFlag(t *testing.T) {
 	}
 }
 
+func TestRunHelpFlag(t *testing.T) {
+	config := map[string]any{
+		"build": map[string]any{"cmd": "echo ok"},
+	}
+	stdin := configToReader(t, config)
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"-h"}, stdin, &stdout, &stderr)
+
+	if code != 0 {
+		t.Errorf("exit code = %d, want 0", code)
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "wave flow") {
+		t.Errorf("help should mention 'wave flow', got: %q", out)
+	}
+	if !strings.Contains(out, "--list") {
+		t.Errorf("help should mention '--list' flag, got: %q", out)
+	}
+}
+
+func TestRunHelpFlagLong(t *testing.T) {
+	config := map[string]any{}
+	stdin := configToReader(t, config)
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"--help"}, stdin, &stdout, &stderr)
+
+	if code != 0 {
+		t.Errorf("exit code = %d, want 0", code)
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "wave flow") {
+		t.Errorf("help should mention 'wave flow', got: %q", out)
+	}
+}
+
 func TestRunListCommandsEmpty(t *testing.T) {
 	config := map[string]any{}
 	stdin := configToReader(t, config)
