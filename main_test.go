@@ -115,12 +115,12 @@ func TestRunNoArgsNoCommands(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := run([]string{}, stdin, &stdout, &stderr)
 
-	if code != 1 {
-		t.Errorf("exit code = %d, want 1", code)
+	if code != 0 {
+		t.Errorf("exit code = %d, want 0", code)
 	}
-	waveErr := parseWaveError(t, stderr.String())
-	if waveErr.Code != "flow-no-commands" {
-		t.Errorf("error code = %q, want 'flow-no-commands'", waveErr.Code)
+	// Should show help when no args
+	if !strings.Contains(stdout.String(), "wave flow") {
+		t.Errorf("stdout should contain help, got: %q", stdout.String())
 	}
 }
 
@@ -134,18 +134,12 @@ func TestRunNoArgsWithCommands(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := run([]string{}, stdin, &stdout, &stderr)
 
-	if code != 1 {
-		t.Errorf("exit code = %d, want 1", code)
+	// Should show help when no args (even with commands defined)
+	if code != 0 {
+		t.Errorf("exit code = %d, want 0", code)
 	}
-	waveErr := parseWaveError(t, stderr.String())
-	if waveErr.Code != "flow-no-command" {
-		t.Errorf("error code = %q, want 'flow-no-command'", waveErr.Code)
-	}
-	if !strings.Contains(waveErr.Details, "build") {
-		t.Errorf("details should list available commands, got: %q", waveErr.Details)
-	}
-	if !strings.Contains(waveErr.Details, "dev") {
-		t.Errorf("details should list available commands, got: %q", waveErr.Details)
+	if !strings.Contains(stdout.String(), "wave flow") {
+		t.Errorf("stdout should contain help, got: %q", stdout.String())
 	}
 }
 

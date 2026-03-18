@@ -23,3 +23,14 @@ lint:
 
 fmt:
     gofmt -s -w .
+
+# ─── local setup ───────────────────────────────────────────────────────
+
+# install flow plugin to ~/.wave/plugins for local testing
+setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p ~/.wave/plugins/flow/bin
+    cp bin/flow ~/.wave/plugins/flow/bin/flow
+    cp Waveplugin ~/.wave/plugins/flow/Waveplugin
+    echo "Installed flow to ~/.wave/plugins/flow"

@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/wave-cli/wave-core/pkg/sdk"
 	"github.com/wave-cli/wave-flow/internal/flow"
@@ -57,13 +56,8 @@ func run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 
 	// Require a command name
 	if len(args) == 0 {
-		cmds := flow.ListCommands(config)
-		if len(cmds) == 0 {
-			sdk.FormatWaveError(stderr, "flow-no-commands", "no flow commands defined", "Add commands to the [flow] section of your Wavefile.")
-			return 1
-		}
-		sdk.FormatWaveError(stderr, "flow-no-command", "no command specified", fmt.Sprintf("Usage: wave flow <command>\nAvailable: %s", strings.Join(cmds, ", ")))
-		return 1
+		printHelp(stdout)
+		return 0
 	}
 
 	cmdName := args[0]
