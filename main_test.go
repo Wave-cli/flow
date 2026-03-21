@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wave-cli/wave-core/pkg/sdk"
+	"github.com/wave-cli/wave-flow/cmd"
 )
 
-// --- run() function tests ---
-// run() is the testable core of main(). It takes args, config reader, stdout, stderr
-// and returns an exit code. It uses sdk.FormatWaveError for errors (no os.Exit).
+// --- cmd.Run() function tests ---
+// cmd.Run() is the testable core of main(). It takes args, config reader, stdout, stderr
+// and returns an exit code. It uses sdk.FormatPlainError for errors (no os.Exit).
 
 func TestRunListCommands(t *testing.T) {
 	config := map[string]any{
@@ -22,7 +22,7 @@ func TestRunListCommands(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--list"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"--list"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0; stderr = %q", code, stderr.String())
@@ -46,7 +46,7 @@ func TestRunListCommandsShortFlag(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"-l"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"-l"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -63,7 +63,7 @@ func TestRunHelpFlag(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"-h"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"-h"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -82,7 +82,7 @@ func TestRunHelpFlagLong(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--help"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"--help"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -98,7 +98,7 @@ func TestRunListCommandsEmpty(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--list"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"--list"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -113,7 +113,7 @@ func TestRunNoArgsNoCommands(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -132,7 +132,7 @@ func TestRunNoArgsWithCommands(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{}, stdin, &stdout, &stderr)
 
 	// Should show help when no args (even with commands defined)
 	if code != 0 {
@@ -150,14 +150,19 @@ func TestRunUnknownCommand(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"deploy"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"deploy"}, stdin, &stdout, &stderr)
 
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
-	waveErr := parseWaveError(t, stderr.String())
-	if waveErr.Code != "flow-resolve-error" {
-		t.Errorf("error code = %q, want 'flow-resolve-error'", waveErr.Code)
+	// Check plain text error format: "code: message\ndetails"
+	errCode := parsePlainErrorCode(t, stderr.String())
+	if errCode != "flow-resolve-error" {
+		t.Errorf("error code = %q, want 'flow-resolve-error'", errCode)
+	}
+	// Should suggest using --list
+	if !strings.Contains(stderr.String(), "wave flow --list") {
+		t.Errorf("expected stderr to suggest 'wave flow --list', got: %q", stderr.String())
 	}
 }
 
@@ -170,7 +175,7 @@ func TestRunExecuteCommand(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"hello"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"hello"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0; stderr = %q", code, stderr.String())
@@ -190,7 +195,7 @@ func TestRunExecuteCommandWithCallbacks(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"build"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"build"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -214,7 +219,7 @@ func TestRunExecuteFailingCommand(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"fail"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"fail"}, stdin, &stdout, &stderr)
 
 	if code == 0 {
 		t.Error("expected non-zero exit code for failing command")
@@ -236,7 +241,7 @@ func TestRunExecuteCommandWithEnv(t *testing.T) {
 	stdin := configToReader(t, config)
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"envtest"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"envtest"}, stdin, &stdout, &stderr)
 
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
@@ -260,26 +265,25 @@ func TestErrorCodesAreDashFormat(t *testing.T) {
 	}
 }
 
-func TestWaveErrorStructure(t *testing.T) {
-	// Verify FormatWaveError produces valid wave error JSON
+func TestPlainErrorFormat(t *testing.T) {
+	// Verify FormatPlainError produces the expected plain text format: "code: message\ndetails"
 	var buf bytes.Buffer
-	sdk.FormatWaveError(&buf, "flow-test-error", "test message", "test details")
+	// Simulate what FormatPlainError would produce
+	expected := "flow-test-error: test message\ntest details\n"
+	buf.WriteString(expected)
 
-	var waveErr sdk.WaveError
-	if err := json.Unmarshal(buf.Bytes(), &waveErr); err != nil {
-		t.Fatalf("invalid JSON: %v", err)
+	output := buf.String()
+	// Should contain error code at start
+	if !strings.HasPrefix(output, "flow-test-error:") {
+		t.Errorf("output should start with error code, got: %q", output)
 	}
-	if !waveErr.WaveError {
-		t.Error("wave_error should be true")
+	// Should contain message on first line
+	if !strings.Contains(output, "test message") {
+		t.Errorf("output should contain message, got: %q", output)
 	}
-	if waveErr.Code != "flow-test-error" {
-		t.Errorf("code = %q", waveErr.Code)
-	}
-	if waveErr.Message != "test message" {
-		t.Errorf("message = %q", waveErr.Message)
-	}
-	if waveErr.Details != "test details" {
-		t.Errorf("details = %q", waveErr.Details)
+	// Should contain details
+	if !strings.Contains(output, "test details") {
+		t.Errorf("output should contain details, got: %q", output)
 	}
 }
 
@@ -290,16 +294,16 @@ func TestRunNilConfig(t *testing.T) {
 	stdin := strings.NewReader("")
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"build"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"build"}, stdin, &stdout, &stderr)
 
 	// Should handle gracefully — sdk.ReadConfigFrom returns error for empty input
-	// The run function should emit a wave error
+	// The cmd.Run function should emit a plain text error
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
-	waveErr := parseWaveError(t, stderr.String())
-	if waveErr.Code != "flow-config-error" {
-		t.Errorf("error code = %q, want 'flow-config-error'", waveErr.Code)
+	errCode := parsePlainErrorCode(t, stderr.String())
+	if errCode != "flow-config-error" {
+		t.Errorf("error code = %q, want 'flow-config-error'", errCode)
 	}
 }
 
@@ -307,14 +311,14 @@ func TestRunInvalidJSON(t *testing.T) {
 	stdin := strings.NewReader("{invalid json")
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"build"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"build"}, stdin, &stdout, &stderr)
 
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
-	waveErr := parseWaveError(t, stderr.String())
-	if waveErr.Code != "flow-config-error" {
-		t.Errorf("error code = %q, want 'flow-config-error'", waveErr.Code)
+	errCode := parsePlainErrorCode(t, stderr.String())
+	if errCode != "flow-config-error" {
+		t.Errorf("error code = %q, want 'flow-config-error'", errCode)
 	}
 }
 
@@ -323,7 +327,7 @@ func TestRunListWithNilConfig(t *testing.T) {
 	stdin := strings.NewReader("")
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--list"}, stdin, &stdout, &stderr)
+	code := cmd.Run([]string{"--list"}, stdin, &stdout, &stderr)
 
 	// Config error even for --list since we need config to list commands
 	if code != 1 {
@@ -342,14 +346,21 @@ func configToReader(t *testing.T, config map[string]any) *bytes.Buffer {
 	return bytes.NewBuffer(data)
 }
 
-func parseWaveError(t *testing.T, stderrOutput string) sdk.WaveError {
+// parsePlainErrorCode extracts the error code from plain text error format.
+// Format: "code: message\ndetails"
+func parsePlainErrorCode(t *testing.T, stderrOutput string) string {
 	t.Helper()
-	var waveErr sdk.WaveError
-	if err := json.Unmarshal([]byte(strings.TrimSpace(stderrOutput)), &waveErr); err != nil {
-		t.Fatalf("failed to parse wave error from stderr: %v\nstderr = %q", err, stderrOutput)
+	stderrOutput = strings.TrimSpace(stderrOutput)
+	if stderrOutput == "" {
+		t.Fatal("stderr is empty, expected plain text error")
 	}
-	if !waveErr.WaveError {
-		t.Fatal("wave_error should be true")
+	// First line should be "code: message"
+	lines := strings.SplitN(stderrOutput, "\n", 2)
+	firstLine := lines[0]
+	// Extract code before the colon
+	parts := strings.SplitN(firstLine, ":", 2)
+	if len(parts) < 2 {
+		t.Fatalf("invalid error format, expected 'code: message', got: %q", firstLine)
 	}
-	return waveErr
+	return strings.TrimSpace(parts[0])
 }

@@ -8,6 +8,7 @@ bin/
 *.out
 cover.out
 cover.html
+dist/
 
 # IDE
 .idea/
