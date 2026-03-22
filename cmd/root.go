@@ -6,18 +6,9 @@ import (
 	"io"
 
 	"github.com/wave-cli/wave-core/pkg/sdk"
+	we "github.com/wave-cli/wave-core/pkg/sdk/error"
 	"github.com/wave-cli/wave-flow/internal/flow"
 )
-
-// formatError writes a plain text error to stderr.
-// Format: "code: message\ndetails" (if details present)
-func formatError(w io.Writer, code, message, details string) {
-	if details != "" {
-		fmt.Fprintf(w, "%s: %s\n%s\n", code, message, details)
-	} else {
-		fmt.Fprintf(w, "%s: %s\n", code, message)
-	}
-}
 
 // Run is the main entry point for the flow plugin.
 // It reads config from r, processes args, writes output to stdout/stderr,
@@ -38,7 +29,7 @@ func Run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 	// Read config via SDK
 	cfg, err := sdk.ReadConfigFrom(r)
 	if err != nil {
-		formatError(stderr, "flow-config-error", "failed to read config", err.Error())
+		we.Format(stderr, "flow-config-error", "failed to read config", err.Error())
 		return 1
 	}
 	config := cfg.Raw()
@@ -60,7 +51,7 @@ func Run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 	cmd, err := flow.ResolveCommand(config, cmdName)
 	if err != nil {
 		// Show error and tell user how to see available commands
-		formatError(stderr, "flow-resolve-error", err.Error(), "Run 'wave flow --list' to see available commands.")
+		we.Format(stderr, "flow-resolve-error", err.Error(), "Run 'wave flow --list' to see available commands.")
 		return 1
 	}
 
