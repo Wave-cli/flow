@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/wave-cli/wave-core/pkg/sdk"
 	we "github.com/wave-cli/wave-core/pkg/sdk/error"
@@ -51,8 +52,11 @@ func Run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 	// Resolve and execute the command
 	cmd, err := flow.ResolveCommand(config, cmdName)
 	if err != nil {
-		// Show error and tell user how to see available commands
-		we.Format(stderr, "flow-resolve-error", err.Error(), "Run 'wave flow --list' to see available commands.")
+		// Show clean error message without debug codes
+		available := flow.ListCommands(config)
+		fmt.Fprintf(stderr, "command not found: %s\n", cmdName)
+		fmt.Fprintf(stderr, "Available: %s\n", strings.Join(available, ", "))
+		fmt.Fprintln(stderr, "Run 'wave flow --list' to see available commands.")
 		return 1
 	}
 
