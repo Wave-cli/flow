@@ -41,7 +41,8 @@ func Run(args []string, r io.Reader, stdout, stderr io.Writer) int {
 
 	// Require a command name
 	if len(args) == 0 {
-		fmt.Fprintln(stdout, "No command specified. Run 'wave flow --help' for usage.")
+		fmt.Fprintf(stdout, "wave-flow %s\n", GetVersion())
+		fmt.Fprintln(stdout, "Run 'wave flow --help' for usage.")
 		return 0
 	}
 
