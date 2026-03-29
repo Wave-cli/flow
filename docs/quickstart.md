@@ -38,6 +38,7 @@ wave flow --list
 | Option | Description |
 |--------|-------------|
 | `cmd` | Shell command to run (required) |
+| `description` or `desc` | Short description shown in `wave flow --list` |
 | `env` | Environment variables as key-value pairs |
 | `on_success` | Command to run if main command succeeds |
 | `on_fail` | Command to run if main command fails |

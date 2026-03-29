@@ -98,6 +98,7 @@ Or use the `update.sh` script from wave-core which handles both wave-core and wa
 Commands live under `[flow]` as inline tables. `cmd` is required.
 
 - `cmd` (string, required): shell command to execute (`sh -c`)
+- `description` or `desc` (string, optional): short description shown in `wave flow --list`
 - `on_success` (string, optional): runs if the main command exits 0
 - `on_fail` (string, optional): runs if the main command exits non-zero
 - `env` (table/map, optional): extra env vars (values coerced to strings)

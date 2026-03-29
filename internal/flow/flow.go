@@ -15,6 +15,7 @@ import (
 type Command struct {
 	Name      string            // Command name (e.g. "build", "clean")
 	Cmd       string            // Shell command to execute
+	Desc      string            // Optional description
 	OnSuccess string            // Command to run on success (optional)
 	OnFail    string            // Command to run on failure (optional)
 	Env       map[string]string // Extra environment variables (optional)
@@ -49,6 +50,11 @@ func ParseCommand(name string, entry map[string]any) (*Command, error) {
 	}
 	if v, ok := entry["on_fail"].(string); ok {
 		cmd.OnFail = v
+	}
+	if v, ok := entry["description"].(string); ok {
+		cmd.Desc = v
+	} else if v, ok := entry["desc"].(string); ok {
+		cmd.Desc = v
 	}
 
 	// Optional env map
